@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>制作費用お見積もり — epi's atelier</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --mid: #555;
+    --muted: #888;
+    --rule: #e0ddd8;
+    --bg: #faf9f7;
+    --white: #ffffff;
+    --accent: #b07b5e;
+    --accent-light: #f5ede7;
+    --green: #4a7c5e;
+    --green-light: #eaf2ed;
+    --warn: #c0392b;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 32px 16px 80px;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .brand {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .doc-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-top: 6px;
+  }
+  .doc-meta {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 28px;
+  }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+
+  /* Package cards */
+  .packages {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .pkg {
+    border: 1.5px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--white);
+  }
+  .pkg:hover { border-color: var(--accent); }
+  .pkg.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .pkg-name {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .pkg-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .pkg-price span {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .pkg-pages {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .pkg-includes {
+    font-size: 11px;
+    color: var(--mid);
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+  .pkg-includes li {
+    list-style: none;
+    padding-left: 12px;
+    position: relative;
+  }
+  .pkg-includes li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  /* Option rows */
+  .option-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    transition: background 0.1s;
+    border-radius: 4px;
+  }
+  .option-row:first-of-type { border-top: 1px solid var(--rule); }
+  .option-row:hover { background: #f5f3f0; }
+  .option-row.selected { background: var(--accent-light); }
+
+  .opt-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--rule);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .option-row.selected .opt-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .opt-check::after {
+    content: '';
+    display: none;
+    width: 5px;
+    height: 9px;
+    border: 2px solid white;
+    border-top: none;
+    border-left: none;
+    transform: rotate(40deg) translateY(-1px);
+  }
+  .option-row.selected .opt-check::after { display: block; }
+
+  .opt-body { flex: 1; }
+  .opt-name {
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .opt-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .opt-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: right;
+  }
+  .opt-tag {
+    display: inline-block;
+    font-size: 10px;
+    background: var(--accent);
+    color: white;
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.04em;
+  }
+
+  /* Delivery options */
+  .delivery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .delivery-card {
+    border: 1.5px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px;
+    cursor: pointer;
+    background: var(--white);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .delivery-card:hover { border-color: var(--accent); }
+  .delivery-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .delivery-card.express { border-color: #e8b84b; }
+  .delivery-card.express.selected { background: #fdf8ec; border-color: #c9921e; }
+  .delivery-name {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .delivery-weeks {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin: 4px 0 2px;
+  }
+  .delivery-card.express .delivery-weeks { color: #c9921e; }
+  .delivery-note {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .delivery-surcharge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #c9921e;
+    margin-top: 4px;
+  }
+
+  /* Payment notice */
+  .payment-box {
+    background: var(--green-light);
+    border: 1px solid #b0d4be;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .payment-box strong {
+    display: block;
+    font-size: 13px;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+  .payment-step {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+    align-items: baseline;
+  }
+  .step-num {
+    font-weight: 700;
+    color: var(--green);
+    min-width: 16px;
+  }
+
+  /* Discount notice */
+  .discount-box {
+    background: #f0f4ff;
+    border: 1px solid #bfc8e8;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #334;
+  }
+  .discount-box strong {
+    display: block;
+    font-size: 13px;
+    color: #3d5afe;
+    margin-bottom: 4px;
+  }
+
+  /* Summary */
+  .summary-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--ink);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px 12px 0 0;
+    margin: 0 -16px -80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  }
+  .summary-left {
+    font-size: 12px;
+    color: #aaa;
+  }
+  .summary-total {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .summary-deposit {
+    font-size: 12px;
+    color: #ccc;
+  }
+  .summary-right { text-align: right; }
+  .summary-discount {
+    font-size: 12px;
+    color: #7ec8a0;
+  }
+
+  /* Notes */
+  .notes {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    border-top: 1px solid var(--rule);
+    padding-top: 16px;
+    margin-top: 24px;
+  }
+  .notes li {
+    list-style: none;
+    padding-left: 14px;
+    position: relative;
+  }
+  .notes li::before {
+    content: '※';
+    position: absolute;
+    left: 0;
+  }
+
+  /* Before section */
+  .before-box {
+    background: #f2f2f2;
+    border: 1px solid #d8d8d8;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 8px;
+  }
+  .before-intro {
+    font-size: 12px;
+    color: var(--mid);
+    line-height: 1.8;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .before-intro strong {
+    color: var(--ink);
+  }
+  .page-tree {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 20px;
+  }
+  .page-group {}
+  .page-group-name {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .page-group-name::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .page-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 12px;
+    padding: 3px 0;
+    color: var(--mid);
+  }
+  .page-num {
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 18px;
+    font-weight: 600;
+  }
+  .page-name {}
+  .page-sub {
+    padding-left: 24px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .before-note {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .issue-tag {
+    display: inline-block;
+    background: #e8e0d8;
+    color: #7a5c44;
+    font-size: 10px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-right: 4px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 480px) {
+    .packages { grid-template-columns: 1fr; }
+    .delivery-grid { grid-template-columns: 1fr; }
+    .header-top { flex-direction: column; align-items: flex-start; }
+    .doc-meta { text-align: left; }
+    .page-tree { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="brand">epi's atelier — Web制作</div>
+        <div class="doc-title">WordPressリニューアル お見積もり</div>
+      </div>
+      <div class="doc-meta">
+        対象サイト: pushitup.co.jp<br>
+        作成日: <span id="today"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Before section -->
+  <div class="section">
+    <div class="section-label">現状確認 — Before（リニューアル前のサイト構成）</div>
+    <div class="before-box">
+      <div class="before-intro">
+        対象サイト <strong>pushitup.co.jp</strong> の現在のページ構成です。<br>
+        WordPressで構築されており、全 <strong>11ページ</strong> から成ります。最終更新は <strong>2016年</strong> と古く、スマートフォン対応・デザイン・情報整理のいずれも見直しの余地があります。
+      </div>
+
+      <div class="page-tree">
+        <div class="page-group">
+          <div class="page-group-name">メインページ</div>
+          <div class="page-item"><span class="page-num">P1</span><span class="page-name">トップページ（HOME）</span></div>
+        </div>
+
+        <div class="page-group">
+          <div class="page-group-name">会社案内</div>
+          <div class="page-item"><span class="page-num">P2</span><span class="page-name">会社案内（親ページ）</span></div>
+          <div class="page-item page-sub"><span class="page-num">P3</span><span class="page-name">会社概要</span></div>
+          <div class="page-item page-sub"><span class="page-num">P4</span><span class="page-name">沿革</span></div>
+          <div class="page-item page-sub"><span class="page-num">P5</span><span class="page-name">経営理念</span></div>
+        </div>
+
+        <div class="page-group">
+          <div class="page-group-name">事業案内</div>
+          <div class="page-item"><span class="page-num">P6</span><span class="page-name">事業案内（親ページ）</span></div>
+          <div class="page-item page-sub"><span class="page-num">P7</span><span class="page-name">芸術作品の商用化支援事業</span></div>
+          <div class="page-item page-sub"><span class="page-num">P8</span><span class="page-name">PR支援事業</span></div>
+          <div class="page-item page-sub"><span class="page-num">P9</span><span class="page-name">新規事業支援</span></div>
+        </div>
+
+        <div class="page-group">
+          <div class="page-group-name">その他</div>
+          <div class="page-item"><span class="page-num">P10</span><span class="page-name">お問い合わせ</span></div>
+          <div class="page-item"><span class="page-num">P11</span><span class="page-name">ブログ</span></div>
+        </div>
+      </div>
+
+      <div class="before-note">
+        <span class="issue-tag">課題①</span>約10年間、デザイン・内容ともに更新なし<br>
+        <span class="issue-tag">課題②</span>親ページと子ページが重複しており、情報が分散している<br>
+        <span class="issue-tag">課題③</span>スマートフォン表示の最適化が不十分<br>
+        <span class="issue-tag">課題④</span>ブログは存在するが実質的に未活用の状態<br>
+        <br>
+        ※ ページ数・構成はリニューアル時に整理・統合することも可能です（ご相談ください）。
+      </div>
+    </div>
+  </div>
+
+  <!-- Package -->
+  <div class="section">
+    <div class="section-label">Step 1 — ベースプラン（ひとつ選択）</div>
+    <div class="packages">
+      <div class="pkg" data-pkg="light" data-price="55000" onclick="selectPkg(this)">
+        <div class="pkg-name">ライト</div>
+        <div class="pkg-price">¥55,000<span>〜 税別</span></div>
+        <div class="pkg-pages">既存テーマ変更 + 基本設定</div>
+        <ul class="pkg-includes">
+          <li>テーマ導入・初期設定</li>
+          <li>トップページ調整</li>
+          <li>既存コンテンツ流し込み（〜11P）</li>
+          <li>お問い合わせフォーム設置</li>
+          <li>スマホ表示確認</li>
+        </ul>
+      </div>
+      <div class="pkg" data-pkg="standard" data-price="100000" onclick="selectPkg(this)">
+        <div class="pkg-name">スタンダード</div>
+        <div class="pkg-price">¥100,000<span>〜 税別</span></div>
+        <div class="pkg-pages">デザインカスタマイズ + 11ページ制作</div>
+        <ul class="pkg-includes">
+          <li>テーマ選定・カスタマイズ</li>
+          <li>各ページデザイン制作</li>
+          <li>コンテンツ移行・再構成</li>
+          <li>フォーム・ブログ設定</li>
+          <li>マルチデバイス対応</li>
+        </ul>
+      </div>
+      <div class="pkg" data-pkg="full" data-price="180000" onclick="selectPkg(this)">
+        <div class="pkg-name">フルリニューアル</div>
+        <div class="pkg-price">¥180,000<span>〜 税別</span></div>
+        <div class="pkg-pages">フルカスタム + 素材制作込み</div>
+        <ul class="pkg-includes">
+          <li>オリジナルデザイン設計</li>
+          <li>全ページ制作（11P）</li>
+          <li>キービジュアル制作含む</li>
+          <li>SNS連携・GA設置</li>
+          <li>有料テーマ代含む</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="section">
+    <div class="section-label">Step 2 — オプション（複数選択可）</div>
+
+    <div class="option-row" data-price="10000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">追加ページ制作 <span style="font-size:11px;font-weight:400;color:var(--muted)">（1ページごと）</span></div>
+        <div class="opt-desc">基本11ページを超える場合、1ページあたり</div>
+      </div>
+      <div class="opt-price">¥10,000</div>
+    </div>
+
+    <div class="option-row" data-price="15000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">Google Analytics 設置・初期設定</div>
+        <div class="opt-desc">GA4タグ設置、基本レポート設定まで</div>
+      </div>
+      <div class="opt-price">¥15,000</div>
+    </div>
+
+    <div class="option-row" data-price="20000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">SNS連携設定</div>
+        <div class="opt-desc">Instagram / X(Twitter) フィード埋め込み等</div>
+      </div>
+      <div class="opt-price">¥20,000</div>
+    </div>
+
+    <div class="option-row" data-price="8000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">バナー・ヘッダー画像制作 <span style="font-size:11px;font-weight:400;color:var(--muted)">（〜1,200px / 1点）</span></div>
+        <div class="opt-desc">トップスライダー用・各セクション用など</div>
+      </div>
+      <div class="opt-price">¥8,000</div>
+    </div>
+
+    <div class="option-row" data-price="30000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">キービジュアル イラスト制作 <span style="font-size:11px;font-weight:400;color:var(--muted)">（1点）</span></div>
+        <div class="opt-desc">オリジナルイラスト。世界観に合わせた描き下ろし</div>
+      </div>
+      <div class="opt-price">¥30,000</div>
+    </div>
+
+    <div class="option-row" data-price="3000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">アイコン・小バナー制作 <span style="font-size:11px;font-weight:400;color:var(--muted)">（〜300px / 1点）</span></div>
+        <div class="opt-desc">サービスアイコン・SNSサムネイルなど</div>
+      </div>
+      <div class="opt-price">¥3,000</div>
+    </div>
+
+    <div class="option-row" data-price="20000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">トップスライダー用画像セット制作 <span style="font-size:11px;font-weight:400;color:var(--muted)">（3点組）</span></div>
+        <div class="opt-desc">統一感のある3枚セット</div>
+      </div>
+      <div class="opt-price">¥20,000</div>
+    </div>
+
+    <div class="option-row" data-price="15000" onclick="toggleOpt(this)">
+      <div class="opt-check"></div>
+      <div class="opt-body">
+        <div class="opt-name">月額保守サポート <span class="opt-tag">月額</span></div>
+        <div class="opt-desc">WordPress・プラグイン更新、軽微な修正対応（月2時間まで）</div>
+      </div>
+      <div class="opt-price">¥15,000/月</div>
+    </div>
+  </div>
+
+  <!-- Delivery -->
+  <div class="section">
+    <div class="section-label">Step 3 — 納期（ひとつ選択）</div>
+    <div class="delivery-grid">
+      <div class="delivery-card" data-delivery="normal" data-surcharge="0" onclick="selectDelivery(this)">
+        <div class="delivery-name">通常納期</div>
+        <div class="delivery-weeks">6〜8週間</div>
+        <div class="delivery-note">着手から納品まで。丁寧な仕上がり重視。<br>追加料金なし</div>
+      </div>
+      <div class="delivery-card express" data-delivery="express" data-surcharge="40" onclick="selectDelivery(this)">
+        <div class="delivery-name">特急対応 <span class="opt-tag" style="background:#c9921e">特急</span></div>
+        <div class="delivery-weeks">3週間以内</div>
+        <div class="delivery-note">制作費用の全額前払いが条件です</div>
+        <div class="delivery-surcharge">+ 40%（特急料金）</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment -->
+  <div class="section">
+    <div class="section-label">お支払いについて</div>
+    <div class="payment-box">
+      <strong>💳 標準：着手金50%前払い制</strong>
+      <div class="payment-step"><span class="step-num">1.</span><span>ご依頼確定後、制作費の <strong>50%を着手金</strong>としてお振込み</span></div>
+      <div class="payment-step"><span class="step-num">2.</span><span>制作・確認作業</span></div>
+      <div class="payment-step"><span class="step-num">3.</span><span>納品後、<strong>残金50%</strong>のご請求</span></div>
+      <div style="margin-top:8px;color:#555;">※ 特急対応の場合は<strong>全額前払い</strong>が条件となります。</div>
+    </div>
+  </div>
+
+  <!-- Discount -->
+  <div class="section">
+    <div class="section-label">まとめ発注割引</div>
+    <div class="discount-box">
+      <strong>🎁 オプションを複数まとめてご依頼いただいた場合</strong>
+      オプション3点以上のご選択で <strong>オプション合計から10%割引</strong><br>
+      オプション5点以上のご選択で <strong>オプション合計から15%割引</strong>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <ul class="notes">
+    <li>表示価格はすべて税別です。別途消費税がかかります。</li>
+    <li>有料テーマを使用する場合のテーマ購入費は実費別途となります（目安 ¥5,000〜¥20,000）。</li>
+    <li>テキスト・画像等の素材はご支給いただくことを基本とします。</li>
+    <li>制作開始後のプラン変更・大幅な仕様変更は追加費用が発生する場合があります。</li>
+    <li>月額保守サポートは初月のみ無料（スタンダード・フルリニューアルプランのみ）。</li>
+  </ul>
+
+</div><!-- /page -->
+
+<!-- Sticky summary -->
+<div class="summary-bar">
+  <div class="summary-left">
+    <div id="summary-plan">プランを選択してください</div>
+    <div id="summary-opts"></div>
+  </div>
+  <div class="summary-right">
+    <div class="summary-discount" id="summary-discount"></div>
+    <div class="summary-total" id="summary-total">¥—</div>
+    <div class="summary-deposit" id="summary-deposit"></div>
+  </div>
+</div>
+
+<script>
+  // Date
+  const d = new Date();
+  document.getElementById('today').textContent =
+    d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+
+  let pkgPrice = 0;
+  let pkgName = '';
+  let deliverySurcharge = 0;
+  let deliveryName = '';
+
+  function selectPkg(el) {
+    document.querySelectorAll('.pkg').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    pkgPrice = parseInt(el.dataset.price);
+    pkgName = el.querySelector('.pkg-name').textContent;
+    updateSummary();
+  }
+
+  function toggleOpt(el) {
+    el.classList.toggle('selected');
+    updateSummary();
+  }
+
+  function selectDelivery(el) {
+    document.querySelectorAll('.delivery-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    deliverySurcharge = parseInt(el.dataset.surcharge);
+    deliveryName = el.querySelector('.delivery-name').textContent.trim();
+    updateSummary();
+  }
+
+  function updateSummary() {
+    if (!pkgPrice) {
+      document.getElementById('summary-total').textContent = '¥—';
+      document.getElementById('summary-deposit').textContent = '';
+      document.getElementById('summary-plan').textContent = 'プランを選択してください';
+      document.getElementById('summary-opts').textContent = '';
+      document.getElementById('summary-discount').textContent = '';
+      return;
+    }
+
+    const selectedOpts = document.querySelectorAll('.option-row.selected');
+    let optTotal = 0;
+    let optCount = 0;
+    let optNames = [];
+
+    selectedOpts.forEach(o => {
+      const p = parseInt(o.dataset.price);
+      if (p) { optTotal += p; optCount++; }
+      optNames.push(o.querySelector('.opt-name').textContent.replace(/（.*?）/g,'').trim());
+    });
+
+    // Discount
+    let discountRate = 0;
+    let discountText = '';
+    if (optCount >= 5) { discountRate = 0.15; discountText = 'オプション5点以上 — 15%割引適用'; }
+    else if (optCount >= 3) { discountRate = 0.10; discountText = 'オプション3点以上 — 10%割引適用'; }
+
+    const discountAmt = Math.round(optTotal * discountRate);
+    const optAfterDiscount = optTotal - discountAmt;
+
+    // Surcharge
+    const base = pkgPrice + optAfterDiscount;
+    const surchargeAmt = Math.round(base * deliverySurcharge / 100);
+    const total = base + surchargeAmt;
+
+    // Deposit
+    const isExpress = deliverySurcharge > 0;
+    const deposit = isExpress ? total : Math.round(total * 0.5);
+    const depositLabel = isExpress ? '全額前払い（特急）' : '着手金（50%前払い）';
+
+    document.getElementById('summary-plan').textContent =
+      pkgName + (deliveryName ? ' ／ ' + deliveryName : '');
+    document.getElementById('summary-opts').textContent =
+      optCount > 0 ? 'オプション ' + optCount + '点' : '';
+    document.getElementById('summary-discount').textContent =
+      discountText ? discountText + (surchargeAmt ? ' ／ 特急+' + deliverySurcharge + '%' : '') :
+      (surchargeAmt ? '特急料金 +' + deliverySurcharge + '%' : '');
+    document.getElementById('summary-total').textContent =
+      '¥' + total.toLocaleString() + '<small style="font-size:12px;font-weight:400;color:#aaa"> 税別</small>';
+    document.getElementById('summary-total').innerHTML =
+      '¥' + total.toLocaleString() + '<small style="font-size:12px;font-weight:400;color:#aaa"> 税別</small>';
+    document.getElementById('summary-deposit').textContent =
+      depositLabel + ' ¥' + deposit.toLocaleString();
+  }
+</script>
+</body>
+</html>
